@@ -254,7 +254,7 @@ export function evaluateTaskGraph(
       formulaVariables,
       inheritance.namespacedScope,
     );
-    const computedEfficiency = Math.min(200, Math.max(0, effEval.value));
+    const computedEfficiency = Math.max(0, effEval.value);
 
     results[task.id] = {
       taskId: task.id,
@@ -418,9 +418,11 @@ export function executeTaskCompletion(params: {
         attrVals[attrKey] = evaluated.value;
       }
 
-      // Inherit lineage to the project/person that produced it
+      // The artifact remembers which project it belongs to.
+      // People stay out of this lineage: the next task must not inherit
+      // the previous worker's rate just because it consumes the document.
       const directLineageIds = evalResult.connectedInstances
-        .filter((ci) => !ci.viaLineageFrom && (ci.conceptClass.slug === 'project' || ci.conceptClass.slug === 'person'))
+        .filter((ci) => !ci.viaLineageFrom && ci.conceptClass.slug === 'project')
         .map((ci) => ci.instance.id);
 
       const outputName = capability.outputArtifact.outputNameTemplate.replace(

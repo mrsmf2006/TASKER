@@ -124,6 +124,27 @@ export function computeInstanceMRO(
   ];
 }
 
+function mergeNamespacedValue(
+  bucket: Record<string, number | string | boolean>,
+  key: string,
+  value: number | string | boolean,
+  strategy: ConflictResolutionStrategy,
+) {
+  if (bucket[key] === undefined || strategy === 'mro_first') {
+    if (bucket[key] === undefined) bucket[key] = value;
+    return;
+  }
+
+  const prev = Number(bucket[key]);
+  const next = Number(value);
+  if (Number.isNaN(prev) || Number.isNaN(next)) return;
+
+  if (strategy === 'multiply') bucket[key] = Number((prev * next).toFixed(4));
+  else if (strategy === 'sum') bucket[key] = Number((prev + next).toFixed(4));
+  else if (strategy === 'max') bucket[key] = Math.max(prev, next);
+  else if (strategy === 'min') bucket[key] = Math.min(prev, next);
+}
+
 export interface TaskInheritanceResolution {
   mroChain: MROChainEntry[];
   resolvedAttributes: Record<string, ResolvedAttribute>;
@@ -307,6 +328,7 @@ export function resolveTaskInheritance(
   }
 
   // Traverse MRO entries to gather instance overrides, custom attributes, and class defaults
+  const namespacedSeen = new Set<string>();
   for (const entry of mroChain) {
     if (entry.nodeType === 'direct_instance' || entry.nodeType === 'lineage_instance') {
       const inst = instanceMap.get(entry.nodeId);
@@ -325,10 +347,18 @@ export function resolveTaskInheritance(
             ? inst.attributeValues[attrDef.key]
             : attrDef.defaultValue;
 
-        // First instance of this concept slug in MRO sets the primary namespace value,
-        // or aggregates if strategy is multiply/sum across same-slug instances
-        if (namespacedScope[cls.slug][attrDef.key] === undefined) {
-          namespacedScope[cls.slug][attrDef.key] = val;
+        // Same concept slug on several instances (two knowledge docs, two people)
+        // combines with that attribute's strategy, so a task output actually
+        // changes the next task's `knowledge.*` variables.
+        const seenKey = `${inst.id}:${cls.slug}:${attrDef.key}`;
+        if (!namespacedSeen.has(seenKey)) {
+          namespacedSeen.add(seenKey);
+          mergeNamespacedValue(
+            namespacedScope[cls.slug],
+            attrDef.key,
+            val,
+            attrDef.conflictStrategy,
+          );
         }
 
         const existing = attributeMetaMap.get(attrDef.key);
@@ -359,9 +389,12 @@ export function resolveTaskInheritance(
 
       // Second: custom instance-only attributes (e.g., Ali's specific bonus attribute)
       for (const [customKey, customObj] of Object.entries(inst.customAttributes)) {
-        if (namespacedScope[cls.slug][customKey] === undefined) {
-          namespacedScope[cls.slug][customKey] = customObj.value;
-        }
+        mergeNamespacedValue(
+          namespacedScope[cls.slug],
+          customKey,
+          customObj.value,
+          customObj.conflictStrategy ?? 'mro_first',
+        );
 
         const existing = attributeMetaMap.get(customKey);
         const sourceRecord: ResolvedAttributeSource = {

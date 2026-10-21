@@ -37,7 +37,7 @@ export const INITIAL_CONCEPT_CLASSES: ConceptClass[] = [
     slug: 'person',
     name: 'آدم‌ها (نیروی انسانی)',
     category: 'human',
-    color: '#38bdf8', // Sky Blue (Blender Geometry Socket style)
+    color: '#3b82f6',
     icon: 'User',
     description: 'قالب پایه برای اعضای سازمان؛ هر فرد از این مفهوم ارث می‌برد و می‌تواند ویژگی‌های اختصاصی و پیشینهٔ سازمانی داشته باشد.',
     parentClassIds: [],
@@ -84,7 +84,7 @@ export const INITIAL_CONCEPT_CLASSES: ConceptClass[] = [
     slug: 'department',
     name: 'واحدها (دپارتمان سازمانی)',
     category: 'department',
-    color: '#a855f7', // Purple Socket
+    color: '#a855f7',
     icon: 'Building2',
     description: 'واحدهای سازمانی که ضریب سربار، استاندارد کیفی و ظرفیت ابزار را به افراد و تسک‌ها منتقل می‌کنند.',
     parentClassIds: [],
@@ -121,7 +121,7 @@ export const INITIAL_CONCEPT_CLASSES: ConceptClass[] = [
     slug: 'project',
     name: 'پروژه‌ها (پروژه کلان)',
     category: 'project',
-    color: '#f59e0b', // Amber Socket
+    color: '#f59e0b',
     icon: 'Briefcase',
     description: 'پروژه‌های کلان که بودجه، ضریب ریسک و اولویت استراتژیک را به تسک‌های زیرمجموعه (مثل سایت) به ارث می‌دهند.',
     parentClassIds: [],
@@ -166,7 +166,7 @@ export const INITIAL_CONCEPT_CLASSES: ConceptClass[] = [
     slug: 'knowledge',
     name: 'دانش و اسناد (Knowledge)',
     category: 'knowledge',
-    color: '#10b981', // Emerald Green Socket
+    color: '#22c55e',
     icon: 'BookOpen',
     description: 'دانش شرکت، اسناد معماری و مستندات فنی که هم ورودی تسک‌ها هستند و هم می‌توانند خروجی یک تسک برای تسک بعدی باشند.',
     parentClassIds: [],
@@ -202,7 +202,7 @@ export const INITIAL_CONCEPT_CLASSES: ConceptClass[] = [
     slug: 'resource',
     name: 'منابع و زیرساخت (Resource)',
     category: 'resource',
-    color: '#ec4899', // Pink Socket
+    color: '#ec4899',
     icon: 'Cpu',
     description: 'منابع سخت‌افزاری، سرورهای ابری یا ابزارهای مصرفی که هزینهٔ ساعتی و شتاب پردازشی دارند.',
     parentClassIds: [],
@@ -353,7 +353,7 @@ export const INITIAL_CAPABILITIES: CapabilityFormula[] = [
     description: 'ترکیب یک نفر + دانش پایه شرکت + پروژه مادر برای استخراج و تولید یک آبجکت جدید از جنس «دانش (سند معماری سایت)».',
     color: '#10b981',
     requiredConceptSlugs: ['person', 'knowledge', 'project'],
-    timeFormula: 'round((baseEffortHours * taskComplexity * knowledge.complexityFactor) / person.velocityFactor + knowledge.learningCurveHours)',
+    timeFormula: 'round((baseEffortHours * taskComplexity * priorityWeight * knowledge.complexityFactor) / person.velocityFactor + knowledge.learningCurveHours)',
     costFormula: 'round(computedHours * person.hourlyRate * overheadMultiplier)',
     efficiencyFormula: 'round(100 * person.velocityFactor * department.toolingEfficiency / taskComplexity)',
     mutations: [
@@ -400,7 +400,7 @@ export const INITIAL_CAPABILITIES: CapabilityFormula[] = [
     description: 'فرمول ترکیبی مدیر برای «تسک سایت»: ارث‌بری هم‌زمان از علی (با پیشینه واحد فنی و پروژه)، سند معماری سایت و پروژه کلان.',
     color: '#38bdf8',
     requiredConceptSlugs: ['person', 'knowledge', 'project'],
-    timeFormula: 'round(((baseEffortHours * taskComplexity * knowledge.complexityFactor * project.riskMultiplier) / (person.velocityFactor * department.toolingEfficiency)) + knowledge.learningCurveHours)',
+    timeFormula: 'round(((baseEffortHours * taskComplexity * priorityWeight * knowledge.complexityFactor * project.riskMultiplier) / (person.velocityFactor * department.toolingEfficiency)) + knowledge.learningCurveHours)',
     costFormula: 'round(computedHours * person.hourlyRate * overheadMultiplier)',
     efficiencyFormula: 'round(100 * (person.velocityFactor * department.toolingEfficiency * knowledge.reusabilityScore) / project.riskMultiplier)',
     mutations: [
@@ -455,7 +455,7 @@ export const INITIAL_CAPABILITIES: CapabilityFormula[] = [
     description: 'ترکیب خروجی تسک سایت + زیرساخت ابری + علی برای استقرار نهایی محصول در محیط عملیاتی.',
     color: '#f59e0b',
     requiredConceptSlugs: ['person', 'knowledge', 'resource', 'project'],
-    timeFormula: 'round((baseEffortHours * taskComplexity) / (person.velocityFactor * resource.accelerationFactor) + knowledge.learningCurveHours)',
+    timeFormula: 'round((baseEffortHours * taskComplexity * priorityWeight) / (person.velocityFactor * resource.accelerationFactor) + knowledge.learningCurveHours)',
     costFormula: 'round(computedHours * (person.hourlyRate + resource.hourlyCost) * overheadMultiplier)',
     efficiencyFormula: 'round(100 * resource.accelerationFactor * person.velocityFactor)',
     mutations: [
@@ -492,7 +492,7 @@ export const INITIAL_CAPABILITIES: CapabilityFormula[] = [
 export const INITIAL_TASKS: TaskNode[] = [
   {
     id: 'task-architecture-doc',
-    title: '۱. تسک تدوین سند معماری سایت',
+    title: '۱. تدوین سند معماری',
     description: 'سارا با ترکیب «دانش پایه شرکت» و «پروژه کلان برند»، خروجیِ «سند معماری سایت» را تولید می‌کند که به ورودی تسک سایت وصل است.',
     capabilityId: 'cap-research-doc',
     status: 'ready',
@@ -506,7 +506,7 @@ export const INITIAL_TASKS: TaskNode[] = [
   },
   {
     id: 'task-website-main',
-    title: '۲. تسک طراحی و توسعه سایت',
+    title: '۲. طراحی و توسعه سایت',
     description: 'مثال اصلی: ارث‌بری هم‌زمان از «علی» (که خودش از آدم‌ها ارث برده و پیشینهٔ واحد فنی و پروژه برند را دارد)، «دانش شرکت + سند معماری سایت» و «پروژه کلان برند».',
     capabilityId: 'cap-web-implementation',
     status: 'locked', // Locked until Task 1 produces the Site Architecture Document!
@@ -520,7 +520,7 @@ export const INITIAL_TASKS: TaskNode[] = [
   },
   {
     id: 'task-site-deploy',
-    title: '۳. تسک استقرار ابری و لانچ سایت',
+    title: '۳. استقرار و لانچ',
     description: 'دریافت خروجیِ تسک توسعه سایت + اتصال کلاستر ابری CI/CD + علی برای انتشار نهایی و به‌روزرسانی بودجه پروژه.',
     capabilityId: 'cap-cloud-release',
     status: 'locked',
