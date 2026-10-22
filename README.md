@@ -9,8 +9,11 @@
 
 نسخهٔ منتشرشده: https://mrsmf2006.github.io/TASKER/
 
+GitHub Pages همین شاخهٔ `main` را سرو می‌کند. `index.html` و `assets/` خروجی بیلد هستند؛ سورس صفحه در `index.dev.html` است. بعد از تغییر کد، `npm run build` همان فایل‌ها را تازه می‌کند.
+
 ```bash
 npm install
 npm test
 npm run dev
+npm run build
 ```
